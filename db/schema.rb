@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_21_172446) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_21_172535) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,6 +73,28 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_21_172446) do
     t.index ["reset_password_token"], name: "index_admin_users_on_reset_password_token", unique: true
   end
 
+  create_table "comments", force: :cascade do |t|
+    t.text "content"
+    t.bigint "commenter_id", null: false
+    t.bigint "commented_post_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["commented_post_id"], name: "index_comments_on_commented_post_id"
+    t.index ["commenter_id"], name: "index_comments_on_commenter_id"
+  end
+
+  create_table "follows", force: :cascade do |t|
+    t.bigint "follower_id", null: false
+    t.bigint "followed_user_id", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["followed_user_id"], name: "index_follows_on_followed_user_id"
+    t.index ["follower_id", "followed_user_id"], name: "index_follows_on_follower_id_and_followed_user_id", unique: true
+    t.index ["follower_id"], name: "index_follows_on_follower_id"
+    t.index ["organization_id"], name: "index_follows_on_organization_id"
+  end
+
   create_table "friendly_id_slugs", force: :cascade do |t|
     t.string "slug", null: false
     t.integer "sluggable_id", null: false
@@ -85,10 +107,31 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_21_172446) do
     t.index ["sluggable_type"], name: "index_friendly_id_slugs_on_sluggable_type"
   end
 
+  create_table "likes", force: :cascade do |t|
+    t.bigint "liker_id", null: false
+    t.bigint "liked_post_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["liked_post_id"], name: "index_likes_on_liked_post_id"
+    t.index ["liker_id", "liked_post_id"], name: "index_likes_on_liker_id_and_liked_post_id", unique: true
+    t.index ["liker_id"], name: "index_likes_on_liker_id"
+  end
+
   create_table "organizations", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "posts", force: :cascade do |t|
+    t.text "content"
+    t.string "image_url"
+    t.bigint "author_id", null: false
+    t.bigint "organization_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_posts_on_author_id"
+    t.index ["organization_id"], name: "index_posts_on_organization_id"
   end
 
   create_table "roles", force: :cascade do |t|
@@ -301,6 +344,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_21_172446) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "comments", "posts", column: "commented_post_id"
+  add_foreign_key "comments", "users", column: "commenter_id"
+  add_foreign_key "follows", "organizations"
+  add_foreign_key "follows", "users", column: "followed_user_id"
+  add_foreign_key "follows", "users", column: "follower_id"
+  add_foreign_key "likes", "posts", column: "liked_post_id"
+  add_foreign_key "likes", "users", column: "liker_id"
+  add_foreign_key "posts", "organizations"
+  add_foreign_key "posts", "users", column: "author_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
